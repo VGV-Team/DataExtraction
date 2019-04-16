@@ -1,0 +1,3 @@
+
+class XPathExtractor:
+    pass
