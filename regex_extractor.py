@@ -80,3 +80,16 @@ class RegExExtractor:
                     "Content": content
                 })
         return results
+
+    @staticmethod
+    def find_information_amazon(website):
+        return {
+            "Title": utilities.clean_text(utilities.extract_data(website, "<span id=\"productTitle\"", "</span>")),
+            "Price": utilities.clean_text(
+                utilities.extract_data(website, "<span id=\"priceblock_ourprice\"", "</span>")),
+            "Stars": utilities.clean_text(utilities.extract_data(website, "<i class=\"a-icon a-icon-star", "</i>")),
+            "NumberOfReviews": utilities.clean_text(
+                utilities.extract_data(website, "<span id=\"acrCustomerReviewText\"", "</span>")),
+            "Description": utilities.clean_text(
+                utilities.extract_data(website, "<ul class=\"a-unordered-list a-vertical a-spacing-none\">", "</ul>"))
+        }

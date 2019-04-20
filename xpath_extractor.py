@@ -8,11 +8,11 @@ class XPathExtractor:
     def find_information_rtvslo(website):
         tree = fromstring(website)
         return {
-            "Title": tree.xpath("//h1/text()"),
-            "Subtitle": tree.xpath("//div[@class='subtitle']/text()"),
-            "Author": tree.xpath("//div[@class='author-name']/text()"),
-            "PublishedTime": utilities.clean_text(tree.xpath("//div[@class='publish-meta']/text()")[0]),
-            "Lead": tree.xpath("//p[@class='lead']/text()"),
+            "Title": tree.xpath("//h1/text()")[0],
+            "Subtitle": tree.xpath("//div[@class='subtitle']/text()")[0],
+            "Author": tree.xpath("//div[@class='author-name']/text()")[0],
+            "PublishedTime": utilities.clean_text(tree.xpath("//div[@class='publish-meta']/text()")[0])[0],
+            "Lead": tree.xpath("//p[@class='lead']/text()")[0],
             "Content": utilities.clean_text(
                 (" ".join(tree.xpath("//div[@class='article-body']//*[not(name()='script')]/text()"))))
         }
@@ -41,3 +41,15 @@ class XPathExtractor:
                     "Content": contents[i]
                 })
         return results
+
+    @staticmethod
+    def find_information_amazon(website):
+        tree = fromstring(website)
+        return {
+            "Title": utilities.clean_text(tree.xpath("//span[@id='productTitle']/text()")[0]),
+            "Price": tree.xpath("//span[@id='priceblock_ourprice']/text()")[0],
+            "Stars": tree.xpath("//a[@class='a-popover-trigger a-declarative']/i/span/text()")[0],
+            "NumberOfReviews": tree.xpath("//span[@id='acrCustomerReviewText']/text()")[0],
+            "Description": utilities.clean_text(
+                "||".join(tree.xpath("//ul[@class='a-unordered-list a-vertical a-spacing-none']//span/text()")))
+        }
