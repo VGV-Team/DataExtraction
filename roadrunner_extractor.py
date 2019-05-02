@@ -50,12 +50,24 @@ class RoadRunnerExtractor:
         return RoadRunnerExtractor.extract_wrapper(wrapper_site.findChildren(recursive=False)[0],
                                                    site.findChildren(recursive=False)[0])
 
+
+    @staticmethod
+    def string_check(s):
+        if s is None:
+            return ""
+        return s
+
     @staticmethod
     def extract_wrapper(site1, site2):
-        # TODO: 1. Detect constant strings and add them to wrapper
-        # TODO: 2. Detect different strings and add them to wrapper as #text (which we will extract)
+        # TODO: 1. Detect constant strings and add them to wrapper DONE
+        # TODO: 2. Detect different strings and add them to wrapper as #text (which we will extract) DONE
         # TODO: 3. Group lists in one wrapper line
         #  (<ul><li>item1</li><li>item2</li></ul> ===> <ul>(<li>#TEXT</li>)*</ul>
+
+        # Assumption: EVERY text element(string) is encapsulated in a HTML tag
+        #   BeautifulSoup does that automatically using 'lxml' parser. To prevent that, use 'html.parser'.
+        #   This is good, but if some websites do not conform to HTML standard then the generated wrapper will be wrong.
+        #   Empirical testing required :)
 
         wrapper = ""
 
@@ -64,7 +76,15 @@ class RoadRunnerExtractor:
 
         # Compares tags from both websites and adds same tags to 'wrapper' (one by one, sequentially)
         if getattr(site1, "name", None) == getattr(site2, "name", None):
-            wrapper = "<" + getattr(site1, "name", None) + ".*>.*"
+
+            wrapper = "<" + getattr(site1, "name", None) + ".*>"
+            # If text is constant (no mismatch), add it to regex
+            if site1.find(text=True, recursive=False) == site2.find(text=True, recursive=False):
+                wrapper += RoadRunnerExtractor.string_check(site1.find(text=True, recursive=False))
+            else:
+                # This is something we need to extract
+                wrapper += "(.*)"
+
             children2 = site2.findChildren(recursive=False)
             k = 0
             for c1 in site1.findChildren(recursive=False):
@@ -76,13 +96,9 @@ class RoadRunnerExtractor:
                         wrapper += w
                         k = j+1
                         break
-            wrapper += ".*<\/" + getattr(site1, "name", None) + ">.*"
-
-        #child1 = child2 = wrapper = None
-        #wrapper += RoadRunnerExtractor.extract_wrapper(child1, child2)
+            wrapper += "<\/" + getattr(site1, "name", None) + ">"
 
         return wrapper
-
 
 
 if __name__ == "__main__":
@@ -111,11 +127,11 @@ if __name__ == "__main__":
             #print(child.findChildren())
             #break
 
-    test1 = "<HTML>Books of:<B>Paul Smith</B><UL><LI><I>Title:</I>Web mining</LI><LI><I>Title:</I>Data mining</LI>" \
+    test1 = "<HTML>Books of:<B>Paul Smith</B><UL><LI><I>Title:</I><p>Web mining</p></LI><LI><I>Title:</I><p>Data mining</p></LI>" \
             "</UL></HTML>"
     print(test1.lower())
-    test2 = "<HTML>Books of:<B>Mike Jones</B><IMG SRC='mike.png' /><UL><LI><I>Title:</I>Databases</LI><LI>" \
-            "<I>Title:</I>HTML pPremier</LI><LI><I>Title:</I>Javascript</LI></UL></HTML>"
+    test2 = "<HTML>Books of:<B>Mike Jones</B><IMG SRC='mike.png' /><UL><LI><I>Title:</I><p>Databases</p></LI><LI>" \
+            "<I>Title:</I><p>HTML Premier</p></LI><LI><I>Title:</I><p>Javascript</p></LI></UL></HTML>"
 
     #s = BeautifulSoup(test1, "html.parser")
     #print(s)
