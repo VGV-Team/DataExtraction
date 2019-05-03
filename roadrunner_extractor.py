@@ -77,10 +77,20 @@ class RoadRunnerExtractor:
         # Compares tags from both websites and adds same tags to 'wrapper' (one by one, sequentially)
         if getattr(site1, "name", None) == getattr(site2, "name", None):
 
-            wrapper = "<" + getattr(site1, "name", None) + ".*>"
+            # skip script and style tags and account for random whitespaces (maybe change .* to \s*)
+            if getattr(site1, "name") in ["script", "style"]:
+                wrapper = ".*<" + getattr(site1, "name", None) + ".*>"
+                wrapper += ".*</" + getattr(site1, "name") + ">.*"
+                return wrapper
+            else:
+                wrapper = "<" + getattr(site1, "name", None) + ".*>"
+
             # If text is constant (no mismatch), add it to regex
             if site1.find(text=True, recursive=False) == site2.find(text=True, recursive=False):
-                wrapper += RoadRunnerExtractor.string_check(site1.find(text=True, recursive=False))
+                if site1.find(text=True, recursive=False) == " ":
+                    wrapper += "\s*"
+                else:
+                    wrapper += RoadRunnerExtractor.string_check(site1.find(text=True, recursive=False))
             else:
                 # This is something we need to extract
                 wrapper += "(.*)"
@@ -138,9 +148,10 @@ if __name__ == "__main__":
     #s = BeautifulSoup(test2, "html.parser")
     #print(s)
 
-    #w = RoadRunnerExtractor.find_information([data1, data2], parser="html.parser")
-    w = RoadRunnerExtractor.find_information([test1, test2], parser="html.parser")
+    w = RoadRunnerExtractor.find_information([data1, data2], parser="html.parser")
+    #w = RoadRunnerExtractor.find_information([test1, test2], parser="html.parser")
+    print(data1.lower())
     print(len(w), len(data1), len(data2))
-    print(w.replace(".*.*", ".*"))
+    print(w.replace(".*.*", ".*").replace("/", "\/").replace("\\\\", "\\").replace("> <", "><").lower())
     print(data1)
 
