@@ -28,7 +28,7 @@ if __name__ == "__main__":
         data = file.read().replace('\r', '').replace('\n', '')
         result_regex = RegExExtractor.find_information_overstock(data)
         result_xpath = XPathExtractor.find_information_overstock(data)
-        print(result_xpath)
+        print(result_regex)
 
     # Amazon data extraction
     with open("resources/amazon.co.uk/EMPIRE Merchandising 669490 Your Empire Needs You Star Wars, Vader, Science "
