@@ -98,21 +98,25 @@ class RoadRunnerExtractor:
             children1 = site1.findChildren(recursive=False)
             children2 = site2.findChildren(recursive=False)
             k = 0
-            for i in range(len(children1)):
+            i = 0
+            while i < len(children1):
                 for j in range(k, len(children2)):
                     w = RoadRunnerExtractor.extract_wrapper(children1[i], children2[j])
                     if w == "":
                         continue
                     else:
-                        #print( j-k)
+                        y = 0
                         if j - k > 0:
-                            for m in range(k, j):
-                                w2 = RoadRunnerExtractor.mismatch(children1, children2, m, 1)
+                            m = k
+                            while m < j:
+                                x, y, w2 = RoadRunnerExtractor.mismatch(children1, children2, m, 1)
+                                m = m + y 
                                 wrapper += w2
                         wrapper += w
                         k = j+1
                         break
-                w = RoadRunnerExtractor.mismatch(children1, children2, i, 0)
+                x, y, w = RoadRunnerExtractor.mismatch(children1, children2, i, 0)
+                i = i + x
                 wrapper += w
 
             wrapper += "<\/" + getattr(site1, "name", None) + ">"    
@@ -124,24 +128,74 @@ class RoadRunnerExtractor:
     def mismatch(site1, site2, t1, ind):
         if ind == 0:
             c1 = site1[t1]
-            tag1 = getattr(c1, "name", None)
-            o2 = RoadRunnerExtractor.optionals(site2, c1, tag1)
-            return o2
+            i, j, w =RoadRunnerExtractor.optionals(site2, site1, c1, t1) 
+            return j, i, w
         if ind == 1:
-            c2 = site2[t1]
-            tag2 = getattr(c2, "name", None)
-            o1 = RoadRunnerExtractor.optionals(site1, c2, tag2)
-            return o1
-       
-        return ""
+            c2 = site2[t1] 
+            return RoadRunnerExtractor.optionals(site1, site2, c2, t1)
+        return 1, 1, ""
             
 
     @staticmethod
-    def optionals(site, c, tag):
-        for i in range(len(site)):
-            if getattr(site[i], "name", None) == tag and site[i].get("id") == c.get("id"):
-                return ""
-        return "(" + RoadRunnerExtractor.extract_wrapper(c, c) + ")?"
+    def optionals(site1, site, c, t1):
+        for i in range(len(site1)):
+            if getattr(site1[i], "name", None) == getattr(c, "name", None) and site1[i].get("id") == c.get("id"):
+                return 1, 1, ""
+        #checking for optional iterators
+        j = t1 - 1
+        wrapperExists = 0
+        w = ""
+        while j >= 0 and getattr(site[t1], "name", None) == getattr(site[j], "name", None) and site[t1].get("id") == site[j].get("id"):
+            print(getattr(site[t1], "name", None) + " " + "yes1")
+            if RoadRunnerExtractor.checkSqueres(site[t1], site[j]) == 1:
+                print("yes11")
+                if wrapperExists == 0 :
+                    print("yes12")
+                    w = RoadRunnerExtractor.extract_wrapper(site[t1], site[j]) 
+                    wrapperExists = 1
+                j = j - 1;
+            else:
+                break
+        k = t1 + 1
+        while  k < len(site) and getattr(site[t1], "name", None) == getattr(site[k], "name", None) and site[t1].get("id") == site[k].get("id") :
+            print(getattr(site[t1], "name", None) + " " + "yes2")
+            if RoadRunnerExtractor.checkSqueres(site[t1], site[k]) == 1:
+                print("yes21")
+                if wrapperExists == 0 :
+                    print("yes22")
+                    w = RoadRunnerExtractor.extract_wrapper(site[t1], site[k]) 
+                    wrapperExists = 1
+                k = k + 1;
+            else:
+                break
+
+        if j == t1-1 and k == t1+1:
+            w = "(" + RoadRunnerExtractor.extract_wrapper(c, c) + ")?"
+            return 1, 1, w
+        elif j != t1-1 and k == t1+1:
+            return t1-j, 1, "((" + w + ")+)?"
+        elif j == t1-1 and k != t1+1:
+            return 1, k-t1, "((" + w + ")+)?"
+        elif j != t1-1 and k != t1+1:
+            #return t1-j, k-t1, "((" + w + ")+)?"
+            return t1-j, k-t1, "((" + w + ")+)?"
+
+    @staticmethod
+    def checkSqueres(site1, site2):
+        children1 = site1.findChildren(recursive=False)
+        children2 = site2.findChildren(recursive=False)
+        print(str(len(children1)) + " " + str(len(children2)))
+        if len(children1) == len(children2):
+            for i in range(len(children1)):
+                if getattr(children1[i], "name", None) != getattr(children2[i], "name", None) or children1[i].get("id") != children2[i].get("id"):
+                    return 0
+                if checkSqueres(children1[i], children2[i]) == 0:
+                    return 0
+            return 1
+        return 0
+
+
+
 
 
 if __name__ == "__main__":
@@ -170,7 +224,7 @@ if __name__ == "__main__":
             #print(child.findChildren())
             #break
 
-    test1 = "<HTML>Books of:<B>Mike Jones</B><IMG SRC='mike.png' /><UL><LI><I>Title:</I><p>Databases</p></LI><LI><I>Title:</I><p>HTML Premier</p></LI><LI><I>Title:</I><p>Javascript</p></LI></UL></HTML>"
+    test1 = "<HTML>Books of:<B>Mike Jones</B><IMG SRC='mike.png' /><IMG SRC='mike.png' /><UL><LI><I>Title:</I><p>Databases</p></LI><LI><I>Title:</I><p>HTML Premier</p></LI><LI><I>Title:</I><p>Javascript</p></LI></UL></HTML>"
     #print(test1.lower())
     test2 = "<HTML>Books of:<B>Paul Smith</B><UL><LI><I>Title:</I><p>Web mining</p></LI><LI><I>Title:</I><p>Data mining</p></LI></UL></HTML>"
 
@@ -182,8 +236,8 @@ if __name__ == "__main__":
     #s = BeautifulSoup(test2, "html.parser")
     #print(s)
 
-    w = RoadRunnerExtractor.find_information([data2, data1], parser="html.parser")
-    #w = RoadRunnerExtractor.find_information([test1, test2], parser="html.parser")
+    w = RoadRunnerExtractor.find_information([data1, data2], parser="html.parser")
+    #w = RoadRunnerExtractor.find_information([test2, test1], parser="html.parser")
     #print(data1.lower())
     #print(len(w), len(data1), len(data2))
     #print(w.replace(".*.*", ".*").replace("/", "\/").replace("\\\\", "\\").replace("> <", "><").lower())
