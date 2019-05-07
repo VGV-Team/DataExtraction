@@ -9,7 +9,7 @@
 
 ## How to run
 
-- Required package: BeautifulSoup (bs4)
+- Required package: BeautifulSoup (bs4) and lxml parser
 - Run main.py to run all extractions (XPATH, RegEx, RoadRunner). Prints results to console.
 - Each type of extraction is implemented in it's own file
 
