@@ -1,5 +1,7 @@
 import utilities
 from bs4 import BeautifulSoup
+from bs4 import Comment
+import re
 
 
 class RoadRunnerExtractor:
@@ -41,15 +43,17 @@ class RoadRunnerExtractor:
 
             '''
 
-        return RoadRunnerExtractor.extract_wrapper(wrapper_site.findChildren(recursive=False)[0],
-                                                   site.findChildren(recursive=False)[0])
+        #return RoadRunnerExtractor.extract_wrapper(wrapper_site.findChildren(recursive=False)[0],
+        #                                           site.findChildren(recursive=False)[0])
+        return RoadRunnerExtractor.extract_wrapper(wrapper_site.find("body"),
+                                                   site.find("body"))
 
 
     @staticmethod
     def string_check(s):
         if s is None:
             return ""
-        return s
+        return s.replace("?", "\?").replace(".", "\.")
 
     @staticmethod
     def extract_wrapper(site1, site2):
@@ -71,18 +75,27 @@ class RoadRunnerExtractor:
             return ""
         # Compares tags from both websites and adds same tags to 'wrapper' (one by one, sequentially)
         elif getattr(site1, "name", None) == getattr(site2, "name", None) and site1.get("id") == site2.get("id"):
-            
+
+            if "| 28. december 2018 ob 08:51" in site1.text or "| 28. december 2018 ob 08:51" in site2.text:
+                print("WQEQWE")
+                print(site1.find(text=True, recursive=True).replace(" ", ""))
+
             # skip script and style tags and account for random whitespaces (maybe change .* to \s*)
             if getattr(site1, "name") in ["script", "style"]:
                 wrapper = ".*<" + getattr(site1, "name", None) + ".*>"
                 wrapper += ".*</" + getattr(site1, "name") + ">.*"
                 return wrapper
             else:
+
+                if getattr(site1, "name") in ["img", "input", "br"]:
+                    wrapper += str(site1).replace("/", "\/") + "\s*"
+                    return wrapper
+
                 id = site1.get("id")
                 if id is not None:
-                    wrapper = "<" + getattr(site1, "name", None) + ".*id=\"" + id + "\".*>"
+                    wrapper = "<" + getattr(site1, "name", None) + " id=\"" + id + "\">"
                 else:
-                    wrapper = "<" + getattr(site1, "name", None) + ".*>"
+                    wrapper = "<" + getattr(site1, "name", None) + ">"
 
 
             # If text is constant (no mismatch), add it to regex
@@ -119,7 +132,7 @@ class RoadRunnerExtractor:
                 i = i + x
                 wrapper += w
 
-            wrapper += "<\/" + getattr(site1, "name", None) + ">"    
+            wrapper += "<\/" + getattr(site1, "name", None) + ">\s*.*"
             
             
         return wrapper
@@ -195,8 +208,29 @@ class RoadRunnerExtractor:
         return 0
 
 
+# Removes all attributes except 'id' and remove 'script' and 'style' tags
+# Removes comments
+# Returns <body>
+def preprocess(site_text, parser="lxml"):
 
 
+    site = BeautifulSoup(site_text, parser)
+    for tag in site.recursiveChildGenerator():
+        try:
+            tag.attrs = {key:value for key,value in tag.attrs.items() if key == "id"}
+            #if isinstance(tag, Comment) or str(tag).startswith("<!--"):
+            #    tag.extract()
+        except:
+            pass
+
+    for tag in site.findAll(["script", "style"]):
+        tag.extract()
+
+    comments = site.findAll(text=lambda text: isinstance(text, Comment))
+    for comment in comments:
+        comment.extract()
+
+    return site.find("body")
 
 if __name__ == "__main__":
     file1 = open("resources/rtvslo.si/Audi A6 50 TDI quattro_ nemir v premijskem razredu - RTVSLO.si.html",
@@ -236,11 +270,39 @@ if __name__ == "__main__":
     #s = BeautifulSoup(test2, "html.parser")
     #print(s)
 
-    w = RoadRunnerExtractor.find_information([data1, data2], parser="html.parser")
+
+    data1 = str(preprocess(data1, parser="lxml"))
+    data2 = str(preprocess(data2, parser="lxml"))
+
+    w = RoadRunnerExtractor.find_information([data1, data2], parser="lxml")
     #w = RoadRunnerExtractor.find_information([test2, test1], parser="html.parser")
     #print(data1.lower())
     #print(len(w), len(data1), len(data2))
-    #print(w.replace(".*.*", ".*").replace("/", "\/").replace("\\\\", "\\").replace("> <", "><").lower())
-    print(w.replace(".*.*", ".*").replace("\/", "/").replace(".*", "").replace("\\\\", "\\").replace("> <", "><").lower())
+    print(data1)
+    print(w.replace(".*.*", ".*").replace("/", "\/").replace("\\\\", "\\").replace("> <", "><").lower())
+    #print(w.replace(".*.*", ".*").replace("\/", "/").replace(".*", "").replace("\\\\", "\\").replace("> <", "><").lower())
     #print(data1)
 
+    #d1 = BeautifulSoup(data1, "html.parser")
+    #print(d1.findChildren()[0])
+    #print(str(d1.findChildren()[0]))
+    #d1body = str(d1.find("body"))
+
+    #print(d1body)
+    #for tag in d1.recursiveChildGenerator():
+    #    try:
+    #        #print(tag.attrs)
+    #        tag.attrs = {key:value for key,value in tag.attrs.items() if key == "id"}
+    #    except:
+    #        pass
+    #for tag in d1.findAll(["script", "style"]):
+    #    tag.extract()
+    #d1body = str(d1.find("body"))
+    #print("qwe: ", d1.find("body"))
+    #print(w)
+
+    print(w)
+    print(data1)
+
+    x = re.search(w, data1)
+    print(x)
