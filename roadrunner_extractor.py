@@ -123,14 +123,14 @@ class RoadRunnerExtractor:
                     else:
                         #some tags in children2 were skipped
                         if j - k > 0:
-                            if getattr(children2[k-1], "name", None) == getattr(children2[k], "name", None) and children2[k-1].get("id") == children2[k].get("id") and RoadRunnerExtractor.checkSqueres(children2[k-1], children2[k]) == 1:
+                            '''if getattr(children2[k-1], "name", None) == getattr(children2[k], "name", None) and children2[k-1].get("id") == children2[k].get("id") and RoadRunnerExtractor.checkSqueres(children2[k-1], children2[k]) == 1:
                                 if getattr(children2[k], "name", None) == getattr(children2[k+1], "name", None) and children2[k].get("id") == children2[k+1].get("id") and RoadRunnerExtractor.checkSqueres(children2[k], children2[k+1]) == 1:
                                     brothers = 1
                                     ind = 0
                                 else:
                                     if brothers > 1:
                                         wrapper = wrapper[:(len(wrapper) - brothers)]
-                                        wrapper.append("(\s*" + RoadRunnerExtractor.extract_wrapper(children2[ind], children2[ind+1]) + ")+\s*")
+                                        wrapper.append("(\s*" + RoadRunnerExtractor.extract_wrapper(children2[ind], children2[ind+1]) + ")+\s*")'''
                             m = k
                             while m < j:
                                 x, y, w2 = RoadRunnerExtractor.mismatch(children1, children2, m, 1)
@@ -139,7 +139,7 @@ class RoadRunnerExtractor:
                                 wrapper.append(w2)
                                 ind = 0
                                 brothers = 1
-                        if j == k:
+                        '''if j == k:
                             if getattr(children2[j-1], "name", None) == getattr(children2[j], "name", None) and children2[j-1].get("id") == children2[j].get("id") and RoadRunnerExtractor.checkSqueres(children2[j-1], children2[j]) == 1:
                                 brothers = brothers + 1
                                 ind = j - 1
@@ -148,7 +148,7 @@ class RoadRunnerExtractor:
                                     wrapper = wrapper[:(len(wrapper) - (brothers))]
                                     wrapper.append("(\s*" + RoadRunnerExtractor.extract_wrapper(children2[ind], children2[ind+1]) + ")+\s*")
                                     brothers = 1
-                                    ind = 0
+                                    ind = 0'''
                         wrapper.append(w)
                         k = j+1
                         breakTrue = 1
@@ -158,9 +158,9 @@ class RoadRunnerExtractor:
                 x = 1
                 if breakTrue == 0:
                     x, y, w = RoadRunnerExtractor.mismatch(children1, children2, i, 0)
-                    if brothers > 1:
+                    '''if brothers > 1:
                         wrapper = wrapper[:(len(wrapper) - brothers)]
-                        wrapper.append("\s*(" + RoadRunnerExtractor.extract_wrapper(children2[ind], children2[ind+1]) + ")+\s*")
+                        wrapper.append("\s*(" + RoadRunnerExtractor.extract_wrapper(children2[ind], children2[ind+1]) + ")+\s*")'''
                     wrapper = wrapper[:(len(wrapper) - y)]                  
                     wrapper.append(w)
                     brothers = 1
@@ -168,11 +168,11 @@ class RoadRunnerExtractor:
                 i = i + x
                 breakTrue = 0
 
-            if brothers > 1:
+            '''if brothers > 1:
                 wrapper = wrapper[:(len(wrapper) - brothers)]
                 wrapper.append("\s*(" + RoadRunnerExtractor.extract_wrapper(children2[ind], children2[ind+1]) + ")+\s*")
                 brothers = 1
-                ind = 0
+                ind = 0'''
 
             #not all tags in children2 were checked
             if k <= len(children2)-1:
